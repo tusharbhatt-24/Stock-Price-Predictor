@@ -14,7 +14,7 @@ A premium, 3D-styled web application for tracking, screening, and predicting sto
 
 - **Backend**: Python with Flask, using a custom-built Ridge Regression model (`stock_price_predictor.py`) that uses only the Python standard library.
 - **Frontend**: Vanilla HTML/JS/CSS single-page application (SPA) with a sleek glassmorphism design, Chart.js for data visualization, and dynamic routing.
-- **Data Collection**: Relies on local CSV archives of historical data (`archive/`), falling back to live data via `yfinance` when needed.
+- **Data Collection**: Relies on local CSV archives of historical data (`archive/`), falling back to live data via `yfinance` when needed. Got dataset of stocks from Kaggle
 
 ## Setup and Run
 
