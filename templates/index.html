@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockVision AI – Premium Dashboard</title>
+  <meta name="description" content="AI-powered stock price prediction dashboard with analytics, portfolio, watchlist, screener and more."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>tailwind.config={darkMode:"class",theme:{extend:{fontFamily:{headline:["Plus Jakarta Sans"],body:["Inter"],label:["Manrope"]}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--indigo:#6366f1;--violet:#7c3aed;--sky:#0ea5e9;--emerald:#10b981;--red:#ef4444;--amber:#f59e0b;}
+    body{background:#eef2ff;color:#0f172a;font-family:'Inter',sans-serif;}
+    .glass{background:rgba(255,255,255,0.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,0.55);box-shadow:0 4px 6px rgba(0,0,0,0.04),0 20px 40px rgba(99,102,241,0.10);}
+    .glass-dark{background:rgba(15,23,42,0.8);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,0.08);}
+    .card-3d{transform-style:preserve-3d;transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s ease;}
+    .card-3d:hover{transform:perspective(600px) rotateX(3deg) rotateY(-2deg) scale(1.015) translateZ(8px);box-shadow:0 32px 80px rgba(99,102,241,0.22),0 8px 32px rgba(99,102,241,0.12);}
+    .metric-3d{transform-style:preserve-3d;transition:transform .3s ease,box-shadow .3s ease;}
+    .metric-3d:hover{transform:perspective(500px) rotateX(4deg) translateY(-4px) translateZ(6px);box-shadow:0 20px 50px rgba(99,102,241,0.15);}
+    .nav-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:.875rem;font-weight:600;color:#475569;transition:all .2s;cursor:pointer;text-decoration:none;}
+    .nav-link:hover{background:rgba(99,102,241,.08);color:#4f46e5;}
+    .nav-link.active{background:#6366f1;color:#fff;box-shadow:0 6px 20px rgba(99,102,241,.35);}
+    .page{display:none;}.page.active{display:block;}
+    @keyframes shimmer{0%{transform:translateX(-120%) skewX(-12deg)}100%{transform:translateX(220%) skewX(-12deg)}}
+    .shimmer::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-120%) skewX(-12deg);animation:shimmer 3.5s infinite;pointer-events:none;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{animation:spin .8s linear infinite;}
+    @keyframes ping-slow{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.6);opacity:0}}
+    .ping-slow{animation:ping-slow 2s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+    .orb{animation:float 8s ease-in-out infinite;} .orb2{animation:float 10s ease-in-out infinite reverse;} .orb3{animation:float 12s ease-in-out infinite 2s;}
+    .no-scroll::-webkit-scrollbar{display:none;}.no-scroll{-ms-overflow-style:none;scrollbar-width:none;}
+    /* Star button */
+    .star-btn{background:rgba(251,191,36,0);}
+    .star-btn:hover{background:rgba(251,191,36,0.12);}
+    .star-btn.starred{background:rgba(251,191,36,0.15);}
+    .star-btn.starred .material-symbols-outlined{color:#f59e0b!important;font-variation-settings:'FILL' 1!important;}
+    @keyframes star-pop{0%{transform:scale(1)}40%{transform:scale(1.45)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+    .star-pop{animation:star-pop .35s cubic-bezier(.175,.885,.32,1.275);}
+    @keyframes star-burst{0%{opacity:1;transform:scale(0) rotate(0deg)}100%{opacity:0;transform:scale(2.5) rotate(20deg)}}
+    .star-burst{position:absolute;pointer-events:none;animation:star-burst .5s ease-out forwards;}
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:9999px;font-size:.7rem;font-weight:700;font-family:'Manrope',sans-serif;}
+    .badge-green{background:#dcfce7;color:#16a34a;} .badge-red{background:#fee2e2;color:#dc2626;}
+    .badge-indigo{background:#e0e7ff;color:#4338ca;} .badge-amber{background:#fef3c7;color:#d97706;}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.875rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(99,102,241,.35);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.45);}
+    .btn-primary:active{transform:scale(.97);}
+    .btn-ghost{background:rgba(99,102,241,.1);color:#4f46e5;border:none;border-radius:10px;padding:8px 16px;font-weight:600;font-size:.8rem;cursor:pointer;transition:all .2s;}
+    .btn-ghost:hover{background:rgba(99,102,241,.18);}
+    .input-field{width:100%;padding:9px 12px;background:rgba(255,255,255,.7);border:1.5px solid #e2e8f0;border-radius:10px;font-size:.875rem;font-family:'Manrope',sans-serif;font-weight:600;outline:none;transition:border .2s;}
+    .input-field:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12);}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:10px 14px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;background:rgba(241,245,249,.6);}
+    td{padding:12px 14px;font-size:.875rem;border-bottom:1px solid rgba(226,232,240,.5);}
+    tr:hover td{background:rgba(99,102,241,.03);}
+    .tab-btn{padding:8px 18px;border-radius:10px;font-size:.8rem;font-weight:700;font-family:'Manrope',sans-serif;cursor:pointer;border:none;background:transparent;color:#64748b;transition:all .2s;}
+    .tab-btn.active{background:#fff;color:#4f46e5;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .notif-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;position:absolute;top:6px;right:6px;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-thumb{background:rgba(99,102,241,.3);border-radius:99px;}
+  </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+
+<!-- Ambient orbs -->
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+  <div class="orb absolute -top-48 -right-48 w-[650px] h-[650px] rounded-full bg-indigo-300/20 blur-[110px]"></div>
+  <div class="orb2 absolute top-1/2 -left-48 w-[550px] h-[550px] rounded-full bg-sky-200/25 blur-[95px]"></div>
+  <div class="orb3 absolute bottom-0 right-1/4 w-[450px] h-[450px] rounded-full bg-violet-200/20 blur-[120px]"></div>
+</div>
+
+<!-- ══════════════ TOP NAV ══════════════ -->
+<nav class="fixed top-0 w-full z-50 glass border-b border-white/30 shadow-lg shadow-indigo-500/8 h-16 flex items-center px-4 md:px-8 gap-4">
+  <!-- Logo -->
+  <div class="flex items-center gap-2.5 mr-4">
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/40" style="transform:perspective(80px) rotateX(8deg) rotateY(-6deg)">
+      <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings:'FILL' 1">trending_up</span>
+    </div>
+    <span class="text-lg font-black text-indigo-700 font-headline tracking-tight">StockVision<span class="text-violet-500">AI</span></span>
+  </div>
+
+  <!-- Search -->
+  <div class="hidden md:flex flex-1 max-w-sm relative">
+    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+    <input id="global-search" type="text" placeholder="Search stocks, ETFs…"
+      class="w-full pl-9 pr-3 py-2 bg-white/60 border border-slate-200 rounded-xl text-sm font-label focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700 font-semibold"/>
+    <div id="search-results" class="hidden absolute top-full mt-1 left-0 right-0 glass rounded-xl shadow-xl z-50 overflow-hidden max-h-56 overflow-y-auto"></div>
+  </div>
+
+  <div class="flex-1"></div>
+
+  <!-- Notif bell -->
+  <button onclick="navigateTo('notifications')" class="relative p-2 text-slate-500 hover:text-indigo-600 transition-colors rounded-full hover:bg-white/60">
+    <span class="material-symbols-outlined text-xl">notifications</span>
+    <div id="notif-badge" class="notif-dot hidden"></div>
+  </button>
+
+  <!-- Profile -->
+  <button onclick="navigateTo('profile')" class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-md">A</button>
+</nav>
+
+<!-- ══════════════ LAYOUT ══════════════ -->
+<div class="flex pt-16 min-h-screen">
+
+  <!-- ── Sidebar ── -->
+  <aside class="hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-60 z-40 flex-col p-3 gap-1 overflow-y-auto no-scroll glass border-r border-white/30">
+    <div class="px-2 py-3 mb-2">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Main</div>
+    </div>
+    <a class="nav-link" id="nav-dashboard"  onclick="navigateTo('dashboard')">  <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">dashboard</span>Dashboard</a>
+    <a class="nav-link" id="nav-analytics"  onclick="navigateTo('analytics')">  <span class="material-symbols-outlined text-base">insights</span>Analytics</a>
+    <a class="nav-link" id="nav-predictions" onclick="navigateTo('predictions')"><span class="material-symbols-outlined text-base">online_prediction</span>Predictions</a>
+    <a class="nav-link" id="nav-history"    onclick="navigateTo('history')">    <span class="material-symbols-outlined text-base">history</span>History</a>
+
+    <div class="px-2 py-3">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Trading</div>
+    </div>
+    <a class="nav-link" id="nav-portfolio"  onclick="navigateTo('portfolio')">  <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">account_balance_wallet</span>Portfolio</a>
+    <a class="nav-link" id="nav-watchlist"  onclick="navigateTo('watchlist')">  <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">star</span>Watchlist</a>
+    <a class="nav-link" id="nav-screener"   onclick="navigateTo('screener')">   <span class="material-symbols-outlined text-base">filter_list</span>Screener</a>
+
+    <div class="mt-auto pt-3 border-t border-slate-200/50 space-y-1">
+      <a class="nav-link" id="nav-notifications" onclick="navigateTo('notifications')"><span class="material-symbols-outlined text-base">notifications</span>Notifications<span id="sidebar-notif-count" class="ml-auto badge badge-red hidden">0</span></a>
+      <a class="nav-link" id="nav-profile"    onclick="navigateTo('profile')">    <span class="material-symbols-outlined text-base">person</span>Profile</a>
+    </div>
+
+    <!-- Sidebar predict control -->
+    <div class="mt-3 p-3 rounded-xl bg-white/60 border border-indigo-100 shadow-sm">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Quick Predict</div>
+      <input id="sb-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field mb-2 uppercase"/>
+      <select id="sb-period" class="input-field mb-2">
+        <option value="6mo">6 Months</option>
+        <option value="1y" selected>1 Year</option>
+        <option value="2y">2 Years</option>
+        <option value="5y">5 Years</option>
+      </select>
+      <button onclick="runDashboardPrediction()" class="btn-primary w-full flex justify-center items-center gap-1.5">
+        <span class="material-symbols-outlined text-sm">model_training</span>
+        <span id="sb-btn-label">Predict</span>
+      </button>
+      <p id="sb-error" class="text-red-500 text-xs mt-1 hidden font-label"></p>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="flex-1 md:ml-60 p-4 md:p-6 lg:p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+
+      <!-- ═══════ DASHBOARD PAGE ═══════ -->
+      <div class="page" id="page-dashboard">
+        <!-- Hero 3D Card -->
+        <div id="hero-card" class="glass card-3d shimmer rounded-2xl p-6 lg:p-8 mb-6 relative overflow-hidden border-l-4 border-indigo-500">
+          <div id="hero-loading" class="hidden absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl z-20">
+            <div class="flex flex-col items-center gap-3">
+              <svg class="spinner w-10 h-10 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg>
+              <p class="font-label font-semibold text-slate-600 text-sm">Fetching market data…</p>
+            </div>
+          </div>
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+            <div>
+              <div class="flex items-center gap-3 mb-2">
+                <div id="hero-icon" class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center shadow-xl" style="transform:perspective(100px) rotateX(8deg) rotateY(-6deg)">
+                  <span id="hero-letter" class="text-white font-headline font-black text-xl">A</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h1 id="hero-ticker" class="font-headline font-extrabold text-4xl tracking-tight text-slate-900">AAPL</h1>
+                    <button id="hero-star-btn" onclick="toggleHeroWatchlist()" title="Add to Watchlist"
+                      class="star-btn flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none group"
+                      aria-label="Add to watchlist">
+                      <span id="hero-star-icon" class="material-symbols-outlined text-2xl text-slate-300 group-hover:text-amber-400 transition-colors duration-200" style="font-variation-settings:'FILL' 0">star</span>
+                    </button>
+                  </div>
+                  <p id="hero-sub" class="font-body text-slate-500 text-sm">Apple Inc.</p>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-4 flex-wrap mt-4">
+                <span id="hero-price" class="font-label text-5xl font-black text-slate-900 tracking-tighter">—</span>
+                <span id="hero-badge" class="badge hidden"></span>
+              </div>
+              <div class="flex gap-4 mt-3 text-xs font-label text-slate-500 flex-wrap">
+                <span>O: <b id="h-open">—</b></span>
+                <span>H: <b id="h-high">—</b></span>
+                <span>L: <b id="h-low">—</b></span>
+                <span>Vol: <b id="h-vol">—</b></span>
+              </div>
+              <p id="hero-date" class="text-xs text-slate-400 font-body mt-1"></p>
+            </div>
+            <div class="bg-indigo-900/6 border border-indigo-400/25 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group w-full md:w-52 text-center" style="transform:perspective(200px) rotateY(-4deg)">
+              <div class="absolute inset-0 rounded-2xl bg-indigo-500/10 blur-xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
+              <p class="font-label text-indigo-600 font-bold text-[10px] uppercase tracking-widest mb-2 relative z-10">AI Target (1-Day)</p>
+              <span id="hero-pred" class="font-headline text-4xl font-black text-indigo-600 relative z-10" style="text-shadow:0 0 24px rgba(99,102,241,.45)">—</span>
+              <div id="hero-upside" class="hidden mt-2 text-xs font-body text-slate-500 relative z-10 justify-center flex items-center gap-1">
+                <span class="material-symbols-outlined text-[13px]" id="upside-arrow">arrow_upward</span>
+                <span>Upside: <strong id="upside-val" class="font-semibold">0%</strong></span>
+              </div>
+              <div class="flex justify-center mt-3 relative z-10"><div class="w-2 h-2 rounded-full bg-indigo-500 relative"><div class="absolute inset-0 rounded-full bg-indigo-400 ping-slow"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-indigo-400 group">
+            <div class="flex justify-between mb-2"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">MAE</h3><span class="material-symbols-outlined text-indigo-400 text-base opacity-60 group-hover:opacity-100">timeline</span></div>
+            <span id="m-mae" class="font-label text-2xl font-black text-slate-800">—</span>
+            <p class="text-[10px] text-slate-400 mt-1">Mean Absolute Error</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-sky-400 group">
+            <div class="flex justify-between mb-2"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">RMSE</h3><span class="material-symbols-outlined text-sky-400 text-base opacity-60 group-hover:opacity-100">square_foot</span></div>
+            <span id="m-rmse" class="font-label text-2xl font-black text-slate-800">—</span>
+            <p class="text-[10px] text-slate-400 mt-1">Root Mean Square Error</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-violet-400 group">
+            <div class="flex justify-between mb-2"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">MAPE</h3><span class="material-symbols-outlined text-violet-400 text-base opacity-60 group-hover:opacity-100">percent</span></div>
+            <span id="m-mape" class="font-label text-2xl font-black text-slate-800">—</span>
+            <p class="text-[10px] text-slate-400 mt-1">Mean Abs % Error</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-emerald-400 group relative overflow-hidden">
+            <div class="absolute -right-3 -bottom-3 w-16 h-16 bg-emerald-400/10 rounded-full blur-xl group-hover:bg-emerald-400/25 transition-all"></div>
+            <div class="flex justify-between mb-2 relative z-10"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dir. Acc.</h3><span class="material-symbols-outlined text-emerald-500 text-base" style="font-variation-settings:'FILL' 1">check_circle</span></div>
+            <span id="m-dir" class="font-label text-2xl font-black text-slate-800 relative z-10">—</span>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden relative z-10"><div id="dir-bar" class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="glass rounded-2xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="font-headline font-bold text-lg text-slate-800">Price vs Prediction Model</h2>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-indigo-500"></div><span class="text-xs font-label text-slate-500">Actual</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-sky-400"></div><span class="text-xs font-label text-slate-500">Predicted</span></div>
+            </div>
+          </div>
+          <div class="relative" style="height:280px">
+            <div id="dash-chart-placeholder" class="absolute inset-0 flex items-center justify-center text-slate-400">
+              <div class="text-center"><span class="material-symbols-outlined text-5xl text-slate-300">show_chart</span><p class="text-sm mt-2">Run a prediction to see the chart</p></div>
+            </div>
+            <canvas id="dashChart" class="hidden" style="height:100%;width:100%"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ ANALYTICS PAGE ═══════ -->
+      <div class="page" id="page-analytics">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">Analytics</h1>
+            <p class="text-sm text-slate-500 font-body">Technical indicators & statistical analysis</p>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <input id="an-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field w-28 uppercase"/>
+            <select id="an-period" class="input-field w-32">
+              <option value="1y" selected>1 Year</option>
+              <option value="2y">2 Years</option>
+              <option value="5y">5 Years</option>
+            </select>
+            <button onclick="loadAnalytics()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">analytics</span>Analyze</button>
+          </div>
+        </div>
+
+        <div id="analytics-content">
+          <div class="text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">analytics</span><p class="mt-2">Enter a ticker and click Analyze</p></div>
+        </div>
+      </div>
+
+      <!-- ═══════ PREDICTIONS PAGE ═══════ -->
+      <div class="page" id="page-predictions">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">AI Predictions</h1>
+            <p class="text-sm text-slate-500 font-body">Ridge regression 1-day-ahead forecasting engine</p>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <input id="pred-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field w-28 uppercase"/>
+            <select id="pred-period" class="input-field w-32">
+              <option value="6mo">6 Months</option>
+              <option value="1y" selected>1 Year</option>
+              <option value="2y">2 Years</option>
+              <option value="5y">5 Years</option>
+            </select>
+            <button onclick="runPredictionPage()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">model_training</span>Predict</button>
+          </div>
+        </div>
+        <div id="pred-loading" class="hidden text-center py-12"><svg class="spinner w-10 h-10 text-indigo-600 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg><p class="text-slate-500 mt-3">Running AI model…</p></div>
+        <div id="pred-content">
+          <div class="text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">online_prediction</span><p class="mt-2">Enter a ticker above and click Predict</p></div>
+        </div>
+      </div>
+
+      <!-- ═══════ HISTORY PAGE ═══════ -->
+      <div class="page" id="page-history">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">Prediction History</h1>
+            <p class="text-sm text-slate-500 font-body">All your previous AI predictions this session</p>
+          </div>
+          <button onclick="clearHistory()" class="btn-ghost flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">delete_sweep</span>Clear All</button>
+        </div>
+        <div class="glass rounded-2xl overflow-hidden">
+          <div id="history-content"><div class="text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">history</span><p class="mt-2">No predictions yet — run one from the Dashboard</p></div></div>
+        </div>
+      </div>
+
+      <!-- ═══════ PORTFOLIO PAGE ═══════ -->
+      <div class="page" id="page-portfolio">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">Portfolio</h1>
+            <p class="text-sm text-slate-500 font-body">Track your holdings and performance</p>
+          </div>
+          <button onclick="openAddHolding()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">add</span>Add Holding</button>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-indigo-400">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Value</p>
+            <p id="port-total-val" class="font-label text-2xl font-black text-slate-800">—</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-sky-400">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cost Basis</p>
+            <p id="port-cost" class="font-label text-2xl font-black text-slate-800">—</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-emerald-400">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Gain</p>
+            <p id="port-gain" class="font-label text-2xl font-black text-slate-800">—</p>
+          </div>
+          <div class="glass metric-3d rounded-xl p-5 border-t-2 border-violet-400">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Return %</p>
+            <p id="port-gain-pct" class="font-label text-2xl font-black text-slate-800">—</p>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl overflow-hidden mb-6">
+          <div class="p-4 border-b border-slate-100/70"><h2 class="font-headline font-bold text-slate-800">Holdings</h2></div>
+          <div id="portfolio-table" class="overflow-x-auto"></div>
+        </div>
+
+        <!-- Portfolio chart -->
+        <div class="glass rounded-2xl p-6">
+          <h2 class="font-headline font-bold text-slate-800 mb-4">Allocation</h2>
+          <div style="height:260px;max-width:400px;margin:0 auto"><canvas id="portChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ═══════ WATCHLIST PAGE ═══════ -->
+      <div class="page" id="page-watchlist">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">Watchlist</h1>
+            <p class="text-sm text-slate-500 font-body">Monitor your tracked stocks</p>
+          </div>
+          <div class="flex gap-2">
+            <input id="wl-add-ticker" type="text" placeholder="Add ticker…" class="input-field w-36 uppercase"/>
+            <button onclick="addToWatchlist()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">add</span>Add</button>
+          </div>
+        </div>
+        <div id="watchlist-content" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="text-center py-16 col-span-4 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">star</span><p class="mt-2">Loading watchlist…</p></div>
+        </div>
+      </div>
+
+      <!-- ═══════ SCREENER PAGE ═══════ -->
+      <div class="page" id="page-screener">
+        <div class="mb-6">
+          <h1 class="font-headline font-black text-2xl text-slate-900">Stock Screener</h1>
+          <p class="text-sm text-slate-500 font-body">Filter from 5,800+ local stocks & ETFs</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass rounded-2xl p-5 mb-6">
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+            <div>
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Market</label>
+              <select id="sc-type" class="input-field" onchange="updatePriceLabel()">
+                <option value="stocks">🇺🇸 US Stocks</option>
+                <option value="etfs">🇺🇸 US ETFs</option>
+                <option value="indian">🇮🇳 Indian (NSE)</option>
+                <option value="all">🌐 All Markets</option>
+              </select>
+            </div>
+            <div>
+              <label id="sc-price-label-min" class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Min Price ($)</label>
+              <input id="sc-min-price" type="number" value="1" placeholder="0" class="input-field"/>
+            </div>
+            <div>
+              <label id="sc-price-label-max" class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Max Price ($)</label>
+              <input id="sc-max-price" type="number" value="500" placeholder="9999" class="input-field"/>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Min Change (%)</label>
+              <input id="sc-min-chg" type="number" value="-100" step="0.5" class="input-field"/>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Max Change (%)</label>
+              <input id="sc-max-chg" type="number" value="100" step="0.5" class="input-field"/>
+            </div>
+          </div>
+          <div class="mt-4 flex gap-3 flex-wrap">
+            <button onclick="runScreener()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">filter_list</span>Screen Stocks</button>
+            <button onclick="setScreenerPreset('gainers')" class="btn-ghost">🚀 Top Gainers</button>
+            <button onclick="setScreenerPreset('losers')" class="btn-ghost">📉 Top Losers</button>
+            <button onclick="setScreenerPreset('cheap')" class="btn-ghost">💰 Under $20</button>
+            <button onclick="setScreenerPreset('nse_gainers')" class="btn-ghost">🇮🇳 NSE Gainers</button>
+            <button onclick="setScreenerPreset('nse_losers')" class="btn-ghost">🇮🇳 NSE Losers</button>
+          </div>
+        </div>
+
+        <div id="screener-loading" class="hidden text-center py-12">
+          <svg class="spinner w-10 h-10 text-indigo-600 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg>
+          <p class="text-slate-500 mt-3 font-label">Scanning 5,800+ stocks…</p>
+        </div>
+        <div id="screener-results" class="glass rounded-2xl overflow-hidden">
+          <div class="text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">filter_list</span><p class="mt-2">Set filters and click Screen Stocks</p></div>
+        </div>
+      </div>
+
+      <!-- ═══════ NOTIFICATIONS PAGE ═══════ -->
+      <div class="page" id="page-notifications">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <div>
+            <h1 class="font-headline font-black text-2xl text-slate-900">Notifications</h1>
+            <p class="text-sm text-slate-500 font-body">Price alerts and prediction updates</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="markAllRead()" class="btn-ghost flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">done_all</span>Mark All Read</button>
+          </div>
+        </div>
+
+        <!-- Add Alert -->
+        <div class="glass rounded-2xl p-5 mb-6">
+          <h2 class="font-headline font-bold text-slate-800 mb-3">Set Price Alert</h2>
+          <div class="flex gap-3 flex-wrap">
+            <input id="alert-ticker" type="text" placeholder="Ticker" class="input-field w-28 uppercase"/>
+            <input id="alert-price" type="number" placeholder="Target Price $" class="input-field w-36"/>
+            <button onclick="addAlert()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">add_alert</span>Set Alert</button>
+          </div>
+        </div>
+
+        <div id="notifications-list" class="space-y-3"></div>
+      </div>
+
+      <!-- ═══════ PROFILE PAGE ═══════ -->
+      <div class="page" id="page-profile">
+        <h1 class="font-headline font-black text-2xl text-slate-900 mb-6">Profile & Settings</h1>
+        <div class="grid md:grid-cols-3 gap-6">
+          <!-- Profile card -->
+          <div class="glass card-3d rounded-2xl p-6 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-3xl font-black mx-auto mb-4 shadow-lg shadow-indigo-500/40">A</div>
+            <h2 id="prof-name" class="font-headline font-black text-xl text-slate-900">Alex Morgan</h2>
+            <p id="prof-email" class="text-sm text-slate-500 font-body mt-1">alex.morgan@stockvision.ai</p>
+            <span id="prof-plan" class="badge badge-indigo mt-2">Pro Plan</span>
+            <div class="mt-4 pt-4 border-t border-slate-100 text-left space-y-2">
+              <div class="flex justify-between text-sm"><span class="text-slate-500">Member since</span><span id="prof-joined" class="font-semibold text-slate-700">Jan 2024</span></div>
+              <div class="flex justify-between text-sm"><span class="text-slate-500">Risk Tolerance</span><span id="prof-risk" class="font-semibold text-slate-700">Moderate</span></div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="md:col-span-2 space-y-4">
+            <div class="glass rounded-2xl p-6">
+              <h2 class="font-headline font-bold text-slate-800 mb-4">Account Settings</h2>
+              <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div><label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Display Name</label>
+                    <input id="set-name" type="text" value="Alex Morgan" class="input-field"/></div>
+                  <div><label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Email</label>
+                    <input id="set-email" type="email" value="alex.morgan@stockvision.ai" class="input-field"/></div>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Risk Tolerance</label>
+                  <select id="set-risk" class="input-field">
+                    <option>Conservative</option>
+                    <option selected>Moderate</option>
+                    <option>Aggressive</option>
+                  </select>
+                </div>
+                <button onclick="saveProfile()" class="btn-primary flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">save</span>Save Changes</button>
+              </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6">
+              <h2 class="font-headline font-bold text-slate-800 mb-4">Notification Preferences</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <div><p class="font-semibold text-slate-700 text-sm">Email Alerts</p><p class="text-xs text-slate-400">Receive price alerts via email</p></div>
+                  <input type="checkbox" id="pref-email" checked class="w-4 h-4 accent-indigo-600"/>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div><p class="font-semibold text-slate-700 text-sm">Push Notifications</p><p class="text-xs text-slate-400">Browser push notifications</p></div>
+                  <input type="checkbox" id="pref-push" checked class="w-4 h-4 accent-indigo-600"/>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div><p class="font-semibold text-slate-700 text-sm">Prediction Alerts</p><p class="text-xs text-slate-400">Notify when new predictions are ready</p></div>
+                  <input type="checkbox" id="pref-pred" checked class="w-4 h-4 accent-indigo-600"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6">
+              <h2 class="font-headline font-bold text-slate-800 mb-3">App Stats</h2>
+              <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="bg-indigo-50 rounded-xl p-4"><p id="stat-preds" class="font-label text-2xl font-black text-indigo-600">0</p><p class="text-xs text-slate-500 mt-1">Predictions Run</p></div>
+                <div class="bg-sky-50 rounded-xl p-4"><p id="stat-holdings" class="font-label text-2xl font-black text-sky-600">5</p><p class="text-xs text-slate-500 mt-1">Holdings</p></div>
+                <div class="bg-emerald-50 rounded-xl p-4"><p id="stat-watchlist" class="font-label text-2xl font-black text-emerald-600">7</p><p class="text-xs text-slate-500 mt-1">Watchlist</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /max-w -->
+  </main>
+</div><!-- /flex layout -->
+
+<!-- ══════ ADD HOLDING MODAL ══════ -->
+<div class="modal-overlay" id="add-holding-modal">
+  <div class="glass rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+    <h2 class="font-headline font-bold text-xl text-slate-900 mb-4">Add Holding</h2>
+    <div class="space-y-3">
+      <div><label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Ticker Symbol</label>
+        <input id="add-ticker" type="text" placeholder="e.g. AAPL" class="input-field uppercase"/></div>
+      <div><label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Shares</label>
+        <input id="add-shares" type="number" placeholder="0" class="input-field"/></div>
+      <div><label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Average Cost ($)</label>
+        <input id="add-cost" type="number" placeholder="0.00" step="0.01" class="input-field"/></div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="submitAddHolding()" class="btn-primary flex-1">Add to Portfolio</button>
+        <button onclick="closeModal('add-holding-modal')" class="btn-ghost flex-1">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// Navigation
+// ══════════════════════════════════════
+const PAGES = ['dashboard','analytics','predictions','history','portfolio','watchlist','screener','notifications','profile'];
+const currentPage = "{{ page }}";
+let dashChartInst = null, portChartInst = null, analyticsChartInst = null, predChartInst = null;
+
+function navigateTo(page) {
+  PAGES.forEach(p => {
+    document.getElementById('page-'+p).classList.remove('active');
+    const nav = document.getElementById('nav-'+p);
+    if(nav) nav.classList.remove('active');
+  });
+  document.getElementById('page-'+page).classList.add('active');
+  const navEl = document.getElementById('nav-'+page);
+  if(navEl) navEl.classList.add('active');
+  window.history.replaceState(null, '', '/'+( page==='dashboard'?'':page));
+
+  if(page==='portfolio') loadPortfolio();
+  if(page==='watchlist') loadWatchlist();
+  if(page==='history') loadHistory();
+  if(page==='notifications') loadNotifications();
+  if(page==='profile') loadProfile();
+}
+
+// Init
+navigateTo(currentPage);
+loadNotifBadge();
+
+// ══════════════════════════════════════
+// Dashboard / Quick Predict
+// ══════════════════════════════════════
+async function runDashboardPrediction() {
+  const ticker = document.getElementById('sb-ticker').value.trim().toUpperCase();
+  const period = document.getElementById('sb-period').value;
+  const errEl = document.getElementById('sb-error');
+  errEl.classList.add('hidden');
+  document.getElementById('hero-loading').classList.remove('hidden');
+  document.getElementById('sb-btn-label').textContent = 'Loading…';
+
+  try {
+    const res = await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,period})});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error);
+    renderHero(j.data);
+    renderDashChart(j.data.chart_data);
+    renderMetrics(j.data.metrics);
+    navigateTo('dashboard');
+  } catch(e) {
+    errEl.textContent = e.message; errEl.classList.remove('hidden');
+  } finally {
+    document.getElementById('hero-loading').classList.add('hidden');
+    document.getElementById('sb-btn-label').textContent = 'Predict';
+  }
+}
+
+// ══════════════════════════════════════
+// Hero Watchlist Star
+// ══════════════════════════════════════
+let _currentHeroTicker = 'AAPL';
+let _heroInWatchlist = false;
+
+async function checkHeroStar(ticker) {
+  _currentHeroTicker = ticker;
+  try {
+    const res = await fetch('/api/watchlist');
+    const j = await res.json();
+    _heroInWatchlist = j.watchlist.some(q => q.ticker === ticker);
+    updateStarUI();
+  } catch(e) {}
+}
+
+function updateStarUI() {
+  const btn  = document.getElementById('hero-star-btn');
+  const icon = document.getElementById('hero-star-icon');
+  if (!btn || !icon) return;
+  if (_heroInWatchlist) {
+    btn.classList.add('starred');
+    icon.style.fontVariationSettings = "'FILL' 1";
+    icon.style.color = '#f59e0b';
+    btn.title = 'Remove from Watchlist';
+  } else {
+    btn.classList.remove('starred');
+    icon.style.fontVariationSettings = "'FILL' 0";
+    icon.style.color = '';
+    btn.title = 'Add to Watchlist';
+  }
+}
+
+async function toggleHeroWatchlist() {
+  const ticker = _currentHeroTicker;
+  if (!ticker) return;
+  const btn  = document.getElementById('hero-star-btn');
+  const icon = document.getElementById('hero-star-icon');
+
+  // Pop animation
+  icon.classList.remove('star-pop');
+  void icon.offsetWidth; // reflow
+  icon.classList.add('star-pop');
+
+  if (_heroInWatchlist) {
+    await fetch('/api/watchlist/remove', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ticker})});
+    _heroInWatchlist = false;
+    showToast(`⭐ ${ticker} removed from Watchlist`);
+  } else {
+    await fetch('/api/watchlist/add', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ticker})});
+    _heroInWatchlist = true;
+    showToast(`⭐ ${ticker} added to Watchlist!`);
+  }
+  updateStarUI();
+}
+
+function renderHero(d) {
+  const t = d.ticker;
+  document.getElementById('hero-ticker').textContent = t;
+  document.getElementById('hero-letter').textContent = t[0];
+  document.getElementById('hero-sub').textContent = d.name || t;
+  document.getElementById('hero-price').textContent = `$${d.latest_close.toFixed(2)}`;
+  document.getElementById('hero-pred').textContent = `$${d.next_pred.toFixed(2)}`;
+  document.getElementById('hero-date').textContent = `Last close: ${d.latest_date}`;
+  checkHeroStar(d.ticker);
+  document.getElementById('h-open').textContent = `$${d.open}`;
+  document.getElementById('h-high').textContent = `$${d.high}`;
+  document.getElementById('h-low').textContent = `$${d.low}`;
+  document.getElementById('h-vol').textContent = fmtNum(d.volume);
+
+  const up = d.pct_change >= 0;
+  const badge = document.getElementById('hero-badge');
+  badge.className = `badge ${up?'badge-green':'badge-red'}`;
+  badge.classList.remove('hidden');
+  badge.innerHTML = `<span class="material-symbols-outlined text-xs">${up?'trending_up':'trending_down'}</span>${up?'+':''}${d.pct_change.toFixed(2)}%`;
+
+  const upsideEl = document.getElementById('hero-upside');
+  upsideEl.style.display='flex'; upsideEl.classList.remove('hidden');
+  document.getElementById('upside-arrow').textContent = d.implied_upside>=0?'arrow_upward':'arrow_downward';
+  const uv = document.getElementById('upside-val');
+  uv.textContent = `${d.implied_upside>=0?'+':''}${d.implied_upside.toFixed(2)}%`;
+  uv.className = `font-semibold ${d.implied_upside>=0?'text-emerald-500':'text-red-500'}`;
+}
+
+function renderMetrics(m) {
+  document.getElementById('m-mae').textContent = m.mae.toFixed(4);
+  document.getElementById('m-rmse').textContent = m.rmse.toFixed(4);
+  document.getElementById('m-mape').textContent = m.mape.toFixed(2)+'%';
+  document.getElementById('m-dir').textContent = m.direction_accuracy.toFixed(1)+'%';
+  document.getElementById('dir-bar').style.width = Math.min(100,m.direction_accuracy)+'%';
+}
+
+function renderDashChart(data) {
+  document.getElementById('dash-chart-placeholder').classList.add('hidden');
+  const canvas = document.getElementById('dashChart');
+  canvas.classList.remove('hidden');
+  if(dashChartInst) dashChartInst.destroy();
+  const ctx = canvas.getContext('2d');
+  const g1 = ctx.createLinearGradient(0,0,0,280);
+  g1.addColorStop(0,'rgba(99,102,241,0.18)'); g1.addColorStop(1,'rgba(99,102,241,0.01)');
+  const g2 = ctx.createLinearGradient(0,0,0,280);
+  g2.addColorStop(0,'rgba(14,165,233,0.12)'); g2.addColorStop(1,'rgba(14,165,233,0.01)');
+  dashChartInst = new Chart(ctx,{
+    type:'line',
+    data:{labels:data.map(p=>p.date),datasets:[
+      {label:'Actual',data:data.map(p=>p.actual),borderColor:'#6366f1',backgroundColor:g1,fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2.5},
+      {label:'Predicted',data:data.map(p=>p.predicted),borderColor:'#0ea5e9',backgroundColor:g2,fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2,borderDash:[6,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleColor:'#94a3b8',bodyColor:'#f1f5f9',padding:12,cornerRadius:10,callbacks:{label:c=>`${c.dataset.label}: $${c.parsed.y.toFixed(2)}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',maxTicksLimit:8},border:{display:false}},
+              y:{grid:{color:'rgba(148,163,184,0.1)'},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',callback:v=>`$${v.toFixed(0)}`},border:{display:false}}}}
+  });
+}
+
+// Auto-run AAPL on load
+window.addEventListener('load',()=>{ runDashboardPrediction(); loadNotifBadge(); });
+
+// ══════════════════════════════════════
+// Analytics Page
+// ══════════════════════════════════════
+async function loadAnalytics() {
+  const ticker = document.getElementById('an-ticker').value.trim().toUpperCase();
+  const period = document.getElementById('an-period').value;
+  const container = document.getElementById('analytics-content');
+  container.innerHTML = `<div class="text-center py-12"><svg class="spinner w-10 h-10 text-indigo-600 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg><p class="text-slate-500 mt-3">Analyzing ${ticker}…</p></div>`;
+  try {
+    const res = await fetch('/api/analytics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,period})});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error);
+    const d = j.data;
+    const rsiColor = d.rsi < 30 ? '#10b981' : d.rsi > 70 ? '#ef4444' : '#f59e0b';
+    container.innerHTML = `
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        ${statCard('RSI (14)',d.rsi.toFixed(1),'speed',rsiColor,'momentum oscillator')}
+        ${statCard('52W High','$'+d['52w_high'],'arrow_upward','#10b981','yearly high')}
+        ${statCard('52W Low','$'+d['52w_low'],'arrow_downward','#ef4444','yearly low')}
+        ${statCard('Avg Volume',fmtNum(d.avg_volume),'bar_chart','#6366f1','30-day avg vol')}
+        ${statCard('30D Volatility',d.vol_30+'%','show_chart','#7c3aed','daily vol σ')}
+        ${statCard('90D Volatility',d.vol_90+'%','timeline','#0ea5e9','quarterly vol σ')}
+        ${statCard('Last Close','$'+d.latest_close,'payments','#0f172a','')}
+        ${statCard('Day Change',`${d.pct_change>=0?'+':''}${d.pct_change}%`,'trending_up',d.pct_change>=0?'#10b981':'#ef4444','')}
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="glass rounded-2xl p-5">
+          <h2 class="font-headline font-bold text-slate-800 mb-4">Price + Moving Averages</h2>
+          <div style="height:240px"><canvas id="maChart"></canvas></div>
+        </div>
+        <div class="glass rounded-2xl p-5">
+          <h2 class="font-headline font-bold text-slate-800 mb-4">Monthly Returns</h2>
+          <div style="height:240px"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass rounded-2xl p-5">
+          <h2 class="font-headline font-bold text-slate-800 mb-4">MACD</h2>
+          <div style="height:220px"><canvas id="macdChart"></canvas></div>
+        </div>
+        <div class="glass rounded-2xl p-5">
+          <h2 class="font-headline font-bold text-slate-800 mb-4">Price Distribution</h2>
+          <div style="height:220px"><canvas id="distChart"></canvas></div>
+        </div>
+      </div>`;
+
+    // MA Chart
+    const maCtx = document.getElementById('maChart').getContext('2d');
+    new Chart(maCtx,{type:'line',data:{labels:d.chart_data.map(p=>p.date),datasets:[
+      {label:'Close',data:d.chart_data.map(p=>p.close),borderColor:'#6366f1',tension:.4,pointRadius:0,borderWidth:2},
+      {label:'MA20',data:d.chart_data.map(p=>p.ma20),borderColor:'#f59e0b',tension:.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+      {label:'MA50',data:d.chart_data.map(p=>p.ma50),borderColor:'#0ea5e9',tension:.4,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+    ]},options:chartOpts()});
+
+    // Monthly returns
+    const mr = d.monthly_returns;
+    const mrCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(mrCtx,{type:'bar',data:{labels:mr.map(m=>m.month.slice(5)),datasets:[{label:'Return %',data:mr.map(m=>m.return),backgroundColor:mr.map(m=>m.return>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)'),borderRadius:6}]},options:{...chartOpts(),plugins:{legend:{display:false}}}});
+
+    // MACD
+    const macdCtx = document.getElementById('macdChart').getContext('2d');
+    new Chart(macdCtx,{type:'bar',data:{labels:d.chart_data.map(p=>p.date),datasets:[
+      {label:'MACD Hist',data:d.chart_data.map(p=>p.macd_hist),backgroundColor:d.chart_data.map(p=>p.macd_hist>=0?'rgba(16,185,129,0.6)':'rgba(239,68,68,0.6)'),borderRadius:2,type:'bar'},
+      {label:'MACD',data:d.chart_data.map(p=>p.macd),borderColor:'#6366f1',tension:.4,pointRadius:0,borderWidth:1.5,type:'line'},
+      {label:'Signal',data:d.chart_data.map(p=>p.signal),borderColor:'#f59e0b',tension:.4,pointRadius:0,borderWidth:1.5,type:'line'},
+    ]},options:{...chartOpts(),plugins:{legend:{position:'top',labels:{font:{size:10,family:'Manrope'},boxWidth:12,padding:8}}}}});
+
+    // Distribution
+    const distCtx = document.getElementById('distChart').getContext('2d');
+    new Chart(distCtx,{type:'bar',data:{labels:d.distribution.map(b=>b.range),datasets:[{label:'Frequency',data:d.distribution.map(b=>b.count),backgroundColor:'rgba(99,102,241,0.6)',borderRadius:6}]},options:{...chartOpts(),plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9,family:'Manrope'},maxRotation:45,color:'#94a3b8'},...noGrid()},y:{...noGrid(),ticks:{color:'#94a3b8',font:{size:9}}}}}});
+  } catch(e) {
+    container.innerHTML = `<div class="text-center py-12 text-red-500"><span class="material-symbols-outlined text-4xl">error</span><p class="mt-2">${e.message}</p></div>`;
+  }
+}
+
+// ══════════════════════════════════════
+// Predictions Page
+// ══════════════════════════════════════
+async function runPredictionPage() {
+  const ticker = document.getElementById('pred-ticker').value.trim().toUpperCase();
+  const period = document.getElementById('pred-period').value;
+  document.getElementById('pred-loading').classList.remove('hidden');
+  document.getElementById('pred-content').innerHTML = '';
+  try {
+    const res = await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,period})});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error);
+    const d = j.data;
+    const upUp = d.implied_upside >= 0;
+    document.getElementById('pred-content').innerHTML = `
+      <div class="glass card-3d rounded-2xl p-6 mb-6 shimmer relative overflow-hidden border-l-4 border-indigo-500">
+        <div class="flex flex-col md:flex-row gap-6 justify-between items-start relative z-10">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center shadow-xl"><span class="text-white font-black text-xl">${ticker[0]}</span></div>
+              <div><h2 class="font-headline font-black text-3xl text-slate-900">${ticker}</h2><p class="text-slate-500 text-sm">${d.name||ticker}</p></div>
+            </div>
+            <div class="flex gap-6 flex-wrap mt-2">
+              <div><p class="text-xs text-slate-400 font-label uppercase tracking-wider">Latest Close</p><p class="font-label text-3xl font-black text-slate-900">$${d.latest_close.toFixed(2)}</p></div>
+              <div><p class="text-xs text-indigo-600 font-label font-bold uppercase tracking-wider">1-Day Prediction</p><p class="font-label text-3xl font-black text-indigo-600" style="text-shadow:0 0 20px rgba(99,102,241,.4)">$${d.next_pred.toFixed(2)}</p></div>
+            </div>
+            <div class="flex gap-4 mt-3 text-sm font-label flex-wrap">
+              <span class="badge ${upUp?'badge-green':'badge-red'}">${upUp?'+':''}${d.implied_upside.toFixed(2)}% implied</span>
+              <span class="badge badge-indigo">Rows: ${d.rows_loaded}</span>
+              <span class="badge badge-amber">Train: ${d.train_samples} | Test: ${d.holdout_samples}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 w-full md:w-auto">
+            ${miniStat('MAE',d.metrics.mae.toFixed(4),'#6366f1')}
+            ${miniStat('RMSE',d.metrics.rmse.toFixed(4),'#0ea5e9')}
+            ${miniStat('MAPE',d.metrics.mape.toFixed(2)+'%','#7c3aed')}
+            ${miniStat('Dir Acc',d.metrics.direction_accuracy.toFixed(1)+'%','#10b981')}
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h2 class="font-headline font-bold text-slate-800 mb-4">Actual vs Predicted (Holdout Set)</h2>
+        <div style="height:300px"><canvas id="predPageChart"></canvas></div>
+      </div>`;
+    const ctx = document.getElementById('predPageChart').getContext('2d');
+    const g1=ctx.createLinearGradient(0,0,0,300); g1.addColorStop(0,'rgba(99,102,241,.18)'); g1.addColorStop(1,'rgba(99,102,241,.01)');
+    new Chart(ctx,{type:'line',data:{labels:d.chart_data.map(p=>p.date),datasets:[
+      {label:'Actual',data:d.chart_data.map(p=>p.actual),borderColor:'#6366f1',backgroundColor:g1,fill:true,tension:.4,pointRadius:0,borderWidth:2.5},
+      {label:'Predicted',data:d.chart_data.map(p=>p.predicted),borderColor:'#0ea5e9',tension:.4,pointRadius:0,borderWidth:2,borderDash:[5,4]}
+    ]},options:{...chartOpts(),plugins:{legend:{position:'top',labels:{font:{size:11,family:'Manrope'},boxWidth:14,padding:12}}}}});
+  } catch(e) {
+    document.getElementById('pred-content').innerHTML = `<div class="text-center py-12 text-red-500"><span class="material-symbols-outlined text-4xl">error</span><p class="mt-2">${e.message}</p></div>`;
+  } finally { document.getElementById('pred-loading').classList.add('hidden'); }
+}
+
+// ══════════════════════════════════════
+// History Page
+// ══════════════════════════════════════
+async function loadHistory() {
+  const res = await fetch('/api/history');
+  const j = await res.json();
+  const container = document.getElementById('history-content');
+  if(!j.history.length) {
+    container.innerHTML = `<div class="text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">history</span><p class="mt-2">No predictions yet</p></div>`;
+    return;
+  }
+  container.innerHTML = `<div class="overflow-x-auto"><table>
+    <thead><tr><th>Ticker</th><th>Period</th><th>Price</th><th>Prediction</th><th>Upside</th><th>MAE</th><th>Dir Acc</th><th>Date</th></tr></thead>
+    <tbody>${j.history.map(h=>`<tr>
+      <td><button onclick="loadTickerFromHistory('${h.ticker}')" class="font-black text-indigo-600 hover:underline">${h.ticker}</button></td>
+      <td><span class="badge badge-indigo">${h.period}</span></td>
+      <td class="font-label font-bold">$${h.price.toFixed(2)}</td>
+      <td class="font-label font-bold text-indigo-600">$${h.pred.toFixed(2)}</td>
+      <td><span class="badge ${h.upside>=0?'badge-green':'badge-red'}">${h.upside>=0?'+':''}${h.upside.toFixed(2)}%</span></td>
+      <td class="font-label">${h.mae}</td>
+      <td class="font-label">${h.dir_acc}%</td>
+      <td class="text-xs text-slate-400">${h.date}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function loadTickerFromHistory(ticker) {
+  document.getElementById('sb-ticker').value = ticker;
+  navigateTo('dashboard');
+  runDashboardPrediction();
+}
+
+async function clearHistory() {
+  await fetch('/api/history/clear',{method:'POST'});
+  loadHistory();
+}
+
+// ══════════════════════════════════════
+// Portfolio Page
+// ══════════════════════════════════════
+async function loadPortfolio() {
+  const res = await fetch('/api/portfolio');
+  const j = await res.json();
+  document.getElementById('port-total-val').textContent = '$'+fmtMoney(j.total_value);
+  document.getElementById('port-cost').textContent = '$'+fmtMoney(j.total_cost);
+  const gainEl = document.getElementById('port-gain');
+  gainEl.textContent = `${j.total_gain>=0?'+':''}$${fmtMoney(j.total_gain)}`;
+  gainEl.className = `font-label text-2xl font-black ${j.total_gain>=0?'text-emerald-600':'text-red-500'}`;
+  const gPct = document.getElementById('port-gain-pct');
+  gPct.textContent = `${j.total_gain_pct>=0?'+':''}${j.total_gain_pct.toFixed(2)}%`;
+  gPct.className = `font-label text-2xl font-black ${j.total_gain_pct>=0?'text-emerald-600':'text-red-500'}`;
+
+  document.getElementById('portfolio-table').innerHTML = `<table>
+    <thead><tr><th>Ticker</th><th>Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Day Change</th><th>Mkt Value</th><th>Gain/Loss</th><th></th></tr></thead>
+    <tbody>${j.holdings.map(h=>`<tr>
+      <td><button onclick="document.getElementById('sb-ticker').value='${h.ticker}';navigateTo('dashboard');runDashboardPrediction()" class="font-black text-indigo-600 hover:underline">${h.ticker}</button></td>
+      <td class="text-xs text-slate-500 max-w-[140px] truncate">${h.name||''}</td>
+      <td class="font-label font-semibold">${h.shares}</td>
+      <td class="font-label">$${h.avg_cost.toFixed(2)}</td>
+      <td class="font-label font-bold">$${h.price.toFixed(2)}</td>
+      <td><span class="badge ${h.change>=0?'badge-green':'badge-red'}">${h.change>=0?'+':''}${h.change.toFixed(2)}%</span></td>
+      <td class="font-label font-bold">$${fmtMoney(h.mkt_value)}</td>
+      <td class="font-label font-bold ${h.gain>=0?'text-emerald-600':'text-red-500'}">${h.gain>=0?'+':''}$${fmtMoney(h.gain)} (${h.gain_pct>=0?'+':''}${h.gain_pct.toFixed(2)}%)</td>
+      <td><button onclick="removeHolding('${h.ticker}')" class="text-red-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-base">delete</span></button></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+
+  // Donut chart
+  if(portChartInst) portChartInst.destroy();
+  const ctx = document.getElementById('portChart').getContext('2d');
+  const colors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#7c3aed','#06b6d4','#84cc16'];
+  portChartInst = new Chart(ctx,{type:'doughnut',data:{labels:j.holdings.map(h=>h.ticker),datasets:[{data:j.holdings.map(h=>h.mkt_value),backgroundColor:colors,borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{family:'Manrope',size:12},padding:14}}}}});
+}
+
+function openAddHolding() { document.getElementById('add-holding-modal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function submitAddHolding() {
+  const ticker = document.getElementById('add-ticker').value.trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('add-shares').value);
+  const avg_cost = parseFloat(document.getElementById('add-cost').value);
+  if(!ticker||!shares||!avg_cost) return;
+  await fetch('/api/portfolio/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,shares,avg_cost})});
+  closeModal('add-holding-modal');
+  loadPortfolio();
+}
+
+async function removeHolding(ticker) {
+  if(!confirm(`Remove ${ticker} from portfolio?`)) return;
+  await fetch('/api/portfolio/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker})});
+  loadPortfolio();
+}
+
+// ══════════════════════════════════════
+// Watchlist Page
+// ══════════════════════════════════════
+async function loadWatchlist() {
+  const res = await fetch('/api/watchlist');
+  const j = await res.json();
+  const container = document.getElementById('watchlist-content');
+  if(!j.watchlist.length) {
+    container.innerHTML = `<div class="col-span-4 text-center py-16 text-slate-400"><span class="material-symbols-outlined text-5xl text-slate-300">star</span><p class="mt-2">Your watchlist is empty</p></div>`;
+    return;
+  }
+  container.innerHTML = j.watchlist.map(q=>`
+    <div class="glass metric-3d rounded-2xl p-5 relative overflow-hidden group">
+      <button onclick="removeFromWatchlist('${q.ticker}')" class="absolute top-3 right-3 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined text-base">close</span></button>
+      <div class="flex items-center gap-2.5 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center"><span class="text-white font-black">${q.ticker[0]}</span></div>
+        <div>
+          <button onclick="document.getElementById('sb-ticker').value='${q.ticker}';navigateTo('dashboard');runDashboardPrediction()" class="font-headline font-black text-slate-900 hover:text-indigo-600 text-lg leading-tight block">${q.ticker}</button>
+          <p class="text-[10px] text-slate-400 truncate max-w-[120px]">${q.name||''}</p>
+        </div>
+      </div>
+      <p class="font-label text-3xl font-black text-slate-900">$${q.price.toFixed(2)}</p>
+      <div class="flex justify-between items-center mt-2">
+        <span class="badge ${q.change>=0?'badge-green':'badge-red'}">${q.change>=0?'+':''}${q.change.toFixed(2)}%</span>
+        <span class="text-xs text-slate-400 font-label">Vol: ${fmtNum(q.volume)}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function addToWatchlist() {
+  const ticker = document.getElementById('wl-add-ticker').value.trim().toUpperCase();
+  if(!ticker) return;
+  await fetch('/api/watchlist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker})});
+  document.getElementById('wl-add-ticker').value='';
+  loadWatchlist();
+}
+
+async function removeFromWatchlist(ticker) {
+  await fetch('/api/watchlist/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker})});
+  loadWatchlist();
+}
+
+// ══════════════════════════════════════
+// Screener Page
+// ══════════════════════════════════════
+async function runScreener() {
+  const type = document.getElementById('sc-type').value;
+  const isIndian = type === 'indian';
+  const payload = {
+    asset_type: type,
+    min_price:  parseFloat(document.getElementById('sc-min-price').value)||0,
+    max_price:  parseFloat(document.getElementById('sc-max-price').value)||999999,
+    min_change: parseFloat(document.getElementById('sc-min-chg').value)||-999,
+    max_change: parseFloat(document.getElementById('sc-max-chg').value)||999,
+    limit: 40,
+  };
+  document.getElementById('screener-loading').classList.remove('hidden');
+  document.getElementById('screener-results').innerHTML='';
+  try {
+    const res = await fetch('/api/screener',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error);
+    if(!j.results.length){
+      document.getElementById('screener-results').innerHTML=`<div class="text-center py-12 text-slate-400"><p>No stocks matched your filters</p></div>`;
+      return;
+    }
+    document.getElementById('screener-results').innerHTML=`
+      <div class="p-3 border-b border-slate-100/70 flex justify-between items-center">
+        <span class="text-sm text-slate-500 font-label font-semibold">${j.results.length} results ${isIndian ? '🇮🇳 NSE' : ''}</span>
+      </div>
+      <div class="overflow-x-auto"><table>
+        <thead><tr><th>Ticker</th><th>Name</th><th>Price</th><th>Change</th><th>High</th><th>Low</th><th>Volume</th><th>Exch</th><th></th></tr></thead>
+        <tbody>${j.results.map(s=>`<tr>
+          <td><button onclick="document.getElementById('sb-ticker').value='${s.ticker}';navigateTo('dashboard');runDashboardPrediction()" class="font-black text-indigo-600 hover:underline">${s.ticker}</button></td>
+          <td class="text-xs text-slate-500 max-w-[160px] truncate">${s.name||''}</td>
+          <td class="font-label font-bold">${s.currency_symbol||'$'}${s.price.toFixed(2)}</td>
+          <td><span class="badge ${s.change>=0?'badge-green':'badge-red'}">${s.change>=0?'+':''}${s.change.toFixed(2)}%</span></td>
+          <td class="text-xs text-slate-500">${s.currency_symbol||'$'}${s.high.toFixed(2)}</td>
+          <td class="text-xs text-slate-500">${s.currency_symbol||'$'}${s.low.toFixed(2)}</td>
+          <td class="text-xs text-slate-500">${fmtNum(s.volume)}</td>
+          <td><span class="badge ${s.exchange==='NSE'?'badge-amber':'badge-indigo'} text-[9px]">${s.exchange||'US'}</span></td>
+          <td><button onclick="addToWL('${s.ticker}')" class="text-slate-300 hover:text-amber-500 transition-colors"><span class="material-symbols-outlined text-base">star</span></button></td>
+        </tr>`).join('')}
+        </tbody></table></div>`;
+  } catch(e) {
+    document.getElementById('screener-results').innerHTML=`<div class="text-center py-12 text-red-500"><p>${e.message}</p></div>`;
+  } finally { document.getElementById('screener-loading').classList.add('hidden'); }
+}
+
+function updatePriceLabel() {
+  const isIndian = document.getElementById('sc-type').value === 'indian';
+  const sym = isIndian ? '₹' : '$';
+  document.getElementById('sc-price-label-min').textContent = `Min Price (${sym})`;
+  document.getElementById('sc-price-label-max').textContent = `Max Price (${sym})`;
+  if(isIndian) {
+    document.getElementById('sc-min-price').value = 100;
+    document.getElementById('sc-max-price').value = 10000;
+  } else {
+    document.getElementById('sc-min-price').value = 1;
+    document.getElementById('sc-max-price').value = 500;
+  }
+}
+
+function setScreenerPreset(preset){
+  if(preset==='gainers'){document.getElementById('sc-type').value='stocks';document.getElementById('sc-min-chg').value=2;document.getElementById('sc-max-chg').value=100;document.getElementById('sc-min-price').value=5;document.getElementById('sc-max-price').value=999999;}
+  else if(preset==='losers'){document.getElementById('sc-type').value='stocks';document.getElementById('sc-min-chg').value=-100;document.getElementById('sc-max-chg').value=-2;document.getElementById('sc-min-price').value=5;document.getElementById('sc-max-price').value=999999;}
+  else if(preset==='cheap'){document.getElementById('sc-type').value='stocks';document.getElementById('sc-min-price').value=1;document.getElementById('sc-max-price').value=20;document.getElementById('sc-min-chg').value=-100;document.getElementById('sc-max-chg').value=100;}
+  else if(preset==='nse_gainers'){document.getElementById('sc-type').value='indian';document.getElementById('sc-min-chg').value=0.5;document.getElementById('sc-max-chg').value=100;document.getElementById('sc-min-price').value=1;document.getElementById('sc-max-price').value=99999;updatePriceLabel();}
+  else if(preset==='nse_losers'){document.getElementById('sc-type').value='indian';document.getElementById('sc-min-chg').value=-100;document.getElementById('sc-max-chg').value=-0.5;document.getElementById('sc-min-price').value=1;document.getElementById('sc-max-price').value=99999;updatePriceLabel();}
+  runScreener();
+}
+
+async function addToWL(ticker){await fetch('/api/watchlist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker})});}
+
+// ══════════════════════════════════════
+// Notifications Page
+// ══════════════════════════════════════
+async function loadNotifications() {
+  const res = await fetch('/api/notifications');
+  const j = await res.json();
+  const icons = {alert:'add_alert',prediction:'online_prediction',news:'newspaper'};
+  const colors = {alert:'text-amber-500',prediction:'text-indigo-500',news:'text-sky-500'};
+  document.getElementById('notifications-list').innerHTML = j.notifications.map(n=>`
+    <div class="glass rounded-xl p-4 flex items-start gap-4 ${n.read?'opacity-70':'border-l-4 border-indigo-500'}">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined ${colors[n.type]||'text-indigo-500'} text-base" style="font-variation-settings:'FILL' 1">${icons[n.type]||'notifications'}</span>
+      </div>
+      <div class="flex-1">
+        <div class="flex justify-between items-start gap-2">
+          <p class="font-headline font-bold text-slate-900 text-sm">${n.title}</p>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs text-slate-400 font-label">${n.time}</span>
+            ${!n.read?`<button onclick="markRead(${n.id})" class="text-indigo-400 hover:text-indigo-600"><span class="material-symbols-outlined text-sm">done</span></button>`:''}
+          </div>
+        </div>
+        <p class="text-sm text-slate-500 font-body mt-0.5">${n.body}</p>
+      </div>
+    </div>`).join('');
+}
+
+async function markRead(id) {
+  await fetch('/api/notifications/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  loadNotifications(); loadNotifBadge();
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:null})});
+  loadNotifications(); loadNotifBadge();
+}
+
+async function addAlert() {
+  const ticker = document.getElementById('alert-ticker').value.trim().toUpperCase();
+  const price = document.getElementById('alert-price').value;
+  if(!ticker||!price) return;
+  await fetch('/api/notifications/add_alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,price})});
+  document.getElementById('alert-ticker').value='';
+  document.getElementById('alert-price').value='';
+  loadNotifications(); loadNotifBadge();
+}
+
+async function loadNotifBadge() {
+  try {
+    const res = await fetch('/api/notifications');
+    const j = await res.json();
+    const badge = document.getElementById('notif-badge');
+    const sbCount = document.getElementById('sidebar-notif-count');
+    if(j.unread > 0){
+      badge.classList.remove('hidden');
+      sbCount.textContent = j.unread; sbCount.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden'); sbCount.classList.add('hidden');
+    }
+  } catch(e){}
+}
+
+// ══════════════════════════════════════
+// Profile Page
+// ══════════════════════════════════════
+async function loadProfile() {
+  const res = await fetch('/api/profile');
+  const j = await res.json();
+  const p = j.profile;
+  document.getElementById('prof-name').textContent = p.name;
+  document.getElementById('prof-email').textContent = p.email;
+  document.getElementById('prof-plan').textContent = p.plan+' Plan';
+  document.getElementById('prof-joined').textContent = p.joined;
+  document.getElementById('prof-risk').textContent = p.risk_tolerance;
+  document.getElementById('set-name').value = p.name;
+  document.getElementById('set-email').value = p.email;
+  document.getElementById('set-risk').value = p.risk_tolerance;
+  document.getElementById('pref-email').checked = p.alert_email;
+  document.getElementById('pref-push').checked = p.alert_push;
+
+  // Stats
+  const histRes = await fetch('/api/history');
+  const histJ = await histRes.json();
+  document.getElementById('stat-preds').textContent = histJ.history.length;
+
+  const portRes = await fetch('/api/portfolio');
+  const portJ = await portRes.json();
+  document.getElementById('stat-holdings').textContent = portJ.holdings.length;
+
+  const wlRes = await fetch('/api/watchlist');
+  const wlJ = await wlRes.json();
+  document.getElementById('stat-watchlist').textContent = wlJ.watchlist.length;
+}
+
+async function saveProfile() {
+  const payload = {
+    name: document.getElementById('set-name').value,
+    email: document.getElementById('set-email').value,
+    risk_tolerance: document.getElementById('set-risk').value,
+    alert_email: document.getElementById('pref-email').checked,
+    alert_push: document.getElementById('pref-push').checked,
+  };
+  const res = await fetch('/api/profile/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const j = await res.json();
+  if(j.ok){
+    document.getElementById('prof-name').textContent = payload.name;
+    document.getElementById('prof-email').textContent = payload.email;
+    showToast('Profile saved!');
+  }
+}
+
+// ══════════════════════════════════════
+// Global Search
+// ══════════════════════════════════════
+let searchTimeout;
+document.getElementById('global-search').addEventListener('input', function(){
+  clearTimeout(searchTimeout);
+  const q = this.value.trim();
+  const resultsEl = document.getElementById('search-results');
+  if(q.length < 1){ resultsEl.classList.add('hidden'); return; }
+  searchTimeout = setTimeout(async ()=>{
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const j = await res.json();
+    if(!j.results.length){ resultsEl.classList.add('hidden'); return; }
+    resultsEl.classList.remove('hidden');
+    resultsEl.innerHTML = j.results.map(r=>`
+      <button onclick="document.getElementById('global-search').value='';document.getElementById('search-results').classList.add('hidden');document.getElementById('sb-ticker').value='${r.ticker}';navigateTo('dashboard');runDashboardPrediction()"
+        class="w-full text-left px-4 py-2.5 hover:bg-indigo-50 transition-colors flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg ${r.exchange==='NSE'?'bg-orange-600':'bg-slate-900'} flex items-center justify-center shrink-0 relative">
+          <span class="text-white font-black text-xs">${r.ticker[0]}</span>
+          ${r.flag?`<span class="absolute -top-1 -right-1 text-[10px]">${r.flag}</span>`:''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-label font-bold text-slate-900 text-sm flex items-center gap-1.5">${r.ticker}
+            ${r.etf?'<span class="badge badge-amber">ETF</span>':''}
+            ${r.exchange==='NSE'?'<span class="badge badge-amber" style="font-size:9px">NSE</span>':''}
+          </p>
+          <p class="text-xs text-slate-400 truncate">${r.name}</p>
+        </div>
+      </button>`).join('');
+  }, 250);
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('#global-search')&&!e.target.closest('#search-results')) document.getElementById('search-results').classList.add('hidden'); });
+
+// ══════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════
+function fmtNum(n){ if(n>=1e9) return (n/1e9).toFixed(1)+'B'; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(0)+'K'; return n; }
+function fmtMoney(n){ return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function statCard(label,val,icon,color,sub){return `<div class="glass metric-3d rounded-xl p-5"><div class="flex justify-between mb-2"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">${label}</h3><span class="material-symbols-outlined text-base" style="color:${color}">${icon}</span></div><p class="font-label text-2xl font-black" style="color:${color}">${val}</p><p class="text-[10px] text-slate-400 mt-1">${sub}</p></div>`;}
+function miniStat(label,val,color){return `<div class="bg-white/60 rounded-xl p-3 border border-slate-100"><p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1">${label}</p><p class="font-label text-xl font-black" style="color:${color}">${val}</p></div>`;}
+function chartOpts(){return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleColor:'#94a3b8',bodyColor:'#f1f5f9',padding:10,cornerRadius:8,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',maxTicksLimit:8},border:{display:false}},y:{grid:{color:'rgba(148,163,184,0.1)'},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8'},border:{display:false}}}};}
+function noGrid(){return {grid:{display:false},border:{display:false}};}
+function showToast(msg){ const t=document.createElement('div'); t.className='fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-xl font-label font-semibold text-sm shadow-2xl z-[9999] transition-all'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400)},2500); }
+</script>
+</body>
+</html>

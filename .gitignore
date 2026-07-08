@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+model.pkl
+predictions.csv
+archive/stocks/
+archive/etfs/
+archive/indian_stocks/
