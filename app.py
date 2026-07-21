@@ -3,6 +3,7 @@ StockVision AI – Full Flask Web Application
 Pages: Dashboard, Analytics, Predictions, History, Portfolio, Watchlist, Screener, Notifications, Profile
 """
 import sys
+import yfinance as yf
 import os
 import csv
 import json
@@ -780,4 +781,4 @@ def api_search():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

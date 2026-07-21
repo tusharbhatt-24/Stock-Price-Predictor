@@ -131,7 +131,7 @@
     <!-- Sidebar predict control -->
     <div class="mt-3 p-3 rounded-xl bg-white/60 border border-indigo-100 shadow-sm">
       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Quick Predict</div>
-      <input id="sb-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field mb-2 uppercase"/>
+      <input id="sb-ticker" type="text" value="RELIANCE" placeholder="Ticker" class="input-field mb-2 uppercase"/>
       <select id="sb-period" class="input-field mb-2">
         <option value="6mo">6 Months</option>
         <option value="1y" selected>1 Year</option>
@@ -254,7 +254,7 @@
             <p class="text-sm text-slate-500 font-body">Technical indicators & statistical analysis</p>
           </div>
           <div class="flex gap-2 flex-wrap">
-            <input id="an-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field w-28 uppercase"/>
+            <input id="an-ticker" type="text" value="RELIANCE" placeholder="Ticker" class="input-field w-28 uppercase"/>
             <select id="an-period" class="input-field w-32">
               <option value="1y" selected>1 Year</option>
               <option value="2y">2 Years</option>
@@ -277,7 +277,7 @@
             <p class="text-sm text-slate-500 font-body">Ridge regression 1-day-ahead forecasting engine</p>
           </div>
           <div class="flex gap-2 flex-wrap">
-            <input id="pred-ticker" type="text" value="AAPL" placeholder="Ticker" class="input-field w-28 uppercase"/>
+            <input id="pred-ticker" type="text" value="RELIANCE" placeholder="Ticker" class="input-field w-28 uppercase"/>
             <select id="pred-period" class="input-field w-32">
               <option value="6mo">6 Months</option>
               <option value="1y" selected>1 Year</option>
@@ -656,13 +656,15 @@ function renderHero(d) {
   document.getElementById('hero-ticker').textContent = t;
   document.getElementById('hero-letter').textContent = t[0];
   document.getElementById('hero-sub').textContent = d.name || t;
-  document.getElementById('hero-price').textContent = `$${d.latest_close.toFixed(2)}`;
-  document.getElementById('hero-pred').textContent = `$${d.next_pred.toFixed(2)}`;
+  const cs = d.currency_symbol || '₹';
+  window._lastCurrencySymbol = cs;
+  document.getElementById('hero-price').textContent = `${cs}${d.latest_close.toFixed(2)}`;
+  document.getElementById('hero-pred').textContent = `${cs}${d.next_pred.toFixed(2)}`;
   document.getElementById('hero-date').textContent = `Last close: ${d.latest_date}`;
   checkHeroStar(d.ticker);
-  document.getElementById('h-open').textContent = `$${d.open}`;
-  document.getElementById('h-high').textContent = `$${d.high}`;
-  document.getElementById('h-low').textContent = `$${d.low}`;
+  document.getElementById('h-open').textContent = `${cs}${d.open}`;
+  document.getElementById('h-high').textContent = `${cs}${d.high}`;
+  document.getElementById('h-low').textContent = `${cs}${d.low}`;
   document.getElementById('h-vol').textContent = fmtNum(d.volume);
 
   const up = d.pct_change >= 0;
@@ -704,9 +706,9 @@ function renderDashChart(data) {
       {label:'Predicted',data:data.map(p=>p.predicted),borderColor:'#0ea5e9',backgroundColor:g2,fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2,borderDash:[6,4]}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleColor:'#94a3b8',bodyColor:'#f1f5f9',padding:12,cornerRadius:10,callbacks:{label:c=>`${c.dataset.label}: $${c.parsed.y.toFixed(2)}`}}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f172a',titleColor:'#94a3b8',bodyColor:'#f1f5f9',padding:12,cornerRadius:10,callbacks:{label:c=>`${c.dataset.label}: ${window._lastCurrencySymbol||'₹'}${c.parsed.y.toFixed(2)}`}}},
       scales:{x:{grid:{display:false},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',maxTicksLimit:8},border:{display:false}},
-              y:{grid:{color:'rgba(148,163,184,0.1)'},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',callback:v=>`$${v.toFixed(0)}`},border:{display:false}}}}
+              y:{grid:{color:'rgba(148,163,184,0.1)'},ticks:{font:{family:'Manrope',size:10},color:'#94a3b8',callback:v=>`${window._lastCurrencySymbol||'₹'}${v.toFixed(0)}`},border:{display:false}}}}
   });
 }
 
@@ -730,12 +732,12 @@ async function loadAnalytics() {
     container.innerHTML = `
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         ${statCard('RSI (14)',d.rsi.toFixed(1),'speed',rsiColor,'momentum oscillator')}
-        ${statCard('52W High','$'+d['52w_high'],'arrow_upward','#10b981','yearly high')}
-        ${statCard('52W Low','$'+d['52w_low'],'arrow_downward','#ef4444','yearly low')}
+        ${statCard('52W High',(d.currency_symbol||'₹')+d['52w_high'],'arrow_upward','#10b981','yearly high')}
+        ${statCard('52W Low',(d.currency_symbol||'₹')+d['52w_low'],'arrow_downward','#ef4444','yearly low')}
         ${statCard('Avg Volume',fmtNum(d.avg_volume),'bar_chart','#6366f1','30-day avg vol')}
         ${statCard('30D Volatility',d.vol_30+'%','show_chart','#7c3aed','daily vol σ')}
         ${statCard('90D Volatility',d.vol_90+'%','timeline','#0ea5e9','quarterly vol σ')}
-        ${statCard('Last Close','$'+d.latest_close,'payments','#0f172a','')}
+        ${statCard('Last Close',(d.currency_symbol||'₹')+d.latest_close,'payments','#0f172a','')}
         ${statCard('Day Change',`${d.pct_change>=0?'+':''}${d.pct_change}%`,'trending_up',d.pct_change>=0?'#10b981':'#ef4444','')}
       </div>
       <div class="grid md:grid-cols-2 gap-6 mb-6">
@@ -811,8 +813,8 @@ async function runPredictionPage() {
               <div><h2 class="font-headline font-black text-3xl text-slate-900">${ticker}</h2><p class="text-slate-500 text-sm">${d.name||ticker}</p></div>
             </div>
             <div class="flex gap-6 flex-wrap mt-2">
-              <div><p class="text-xs text-slate-400 font-label uppercase tracking-wider">Latest Close</p><p class="font-label text-3xl font-black text-slate-900">$${d.latest_close.toFixed(2)}</p></div>
-              <div><p class="text-xs text-indigo-600 font-label font-bold uppercase tracking-wider">1-Day Prediction</p><p class="font-label text-3xl font-black text-indigo-600" style="text-shadow:0 0 20px rgba(99,102,241,.4)">$${d.next_pred.toFixed(2)}</p></div>
+              <div><p class="text-xs text-slate-400 font-label uppercase tracking-wider">Latest Close</p><p class="font-label text-3xl font-black text-slate-900">${d.currency_symbol||'₹'}${d.latest_close.toFixed(2)}</p></div>
+              <div><p class="text-xs text-indigo-600 font-label font-bold uppercase tracking-wider">1-Day Prediction</p><p class="font-label text-3xl font-black text-indigo-600" style="text-shadow:0 0 20px rgba(99,102,241,.4)">${d.currency_symbol||'₹'}${d.next_pred.toFixed(2)}</p></div>
             </div>
             <div class="flex gap-4 mt-3 text-sm font-label flex-wrap">
               <span class="badge ${upUp?'badge-green':'badge-red'}">${upUp?'+':''}${d.implied_upside.toFixed(2)}% implied</span>
@@ -859,8 +861,8 @@ async function loadHistory() {
     <tbody>${j.history.map(h=>`<tr>
       <td><button onclick="loadTickerFromHistory('${h.ticker}')" class="font-black text-indigo-600 hover:underline">${h.ticker}</button></td>
       <td><span class="badge badge-indigo">${h.period}</span></td>
-      <td class="font-label font-bold">$${h.price.toFixed(2)}</td>
-      <td class="font-label font-bold text-indigo-600">$${h.pred.toFixed(2)}</td>
+      <td class="font-label font-bold">₹${h.price.toFixed(2)}</td>
+      <td class="font-label font-bold text-indigo-600">₹${h.pred.toFixed(2)}</td>
       <td><span class="badge ${h.upside>=0?'badge-green':'badge-red'}">${h.upside>=0?'+':''}${h.upside.toFixed(2)}%</span></td>
       <td class="font-label">${h.mae}</td>
       <td class="font-label">${h.dir_acc}%</td>
@@ -886,10 +888,11 @@ async function clearHistory() {
 async function loadPortfolio() {
   const res = await fetch('/api/portfolio');
   const j = await res.json();
-  document.getElementById('port-total-val').textContent = '$'+fmtMoney(j.total_value);
-  document.getElementById('port-cost').textContent = '$'+fmtMoney(j.total_cost);
+  const portCS = (j.holdings&&j.holdings[0]&&j.holdings[0].currency_symbol) || '$';
+  document.getElementById('port-total-val').textContent = portCS+fmtMoney(j.total_value);
+  document.getElementById('port-cost').textContent = portCS+fmtMoney(j.total_cost);
   const gainEl = document.getElementById('port-gain');
-  gainEl.textContent = `${j.total_gain>=0?'+':''}$${fmtMoney(j.total_gain)}`;
+  gainEl.textContent = `${j.total_gain>=0?'+':''}${portCS}${fmtMoney(j.total_gain)}`;
   gainEl.className = `font-label text-2xl font-black ${j.total_gain>=0?'text-emerald-600':'text-red-500'}`;
   const gPct = document.getElementById('port-gain-pct');
   gPct.textContent = `${j.total_gain_pct>=0?'+':''}${j.total_gain_pct.toFixed(2)}%`;
@@ -901,11 +904,11 @@ async function loadPortfolio() {
       <td><button onclick="document.getElementById('sb-ticker').value='${h.ticker}';navigateTo('dashboard');runDashboardPrediction()" class="font-black text-indigo-600 hover:underline">${h.ticker}</button></td>
       <td class="text-xs text-slate-500 max-w-[140px] truncate">${h.name||''}</td>
       <td class="font-label font-semibold">${h.shares}</td>
-      <td class="font-label">$${h.avg_cost.toFixed(2)}</td>
-      <td class="font-label font-bold">$${h.price.toFixed(2)}</td>
+      <td class="font-label">${h.currency_symbol||'$'}${h.avg_cost.toFixed(2)}</td>
+      <td class="font-label font-bold">${h.currency_symbol||'$'}${h.price.toFixed(2)}</td>
       <td><span class="badge ${h.change>=0?'badge-green':'badge-red'}">${h.change>=0?'+':''}${h.change.toFixed(2)}%</span></td>
-      <td class="font-label font-bold">$${fmtMoney(h.mkt_value)}</td>
-      <td class="font-label font-bold ${h.gain>=0?'text-emerald-600':'text-red-500'}">${h.gain>=0?'+':''}$${fmtMoney(h.gain)} (${h.gain_pct>=0?'+':''}${h.gain_pct.toFixed(2)}%)</td>
+      <td class="font-label font-bold">${h.currency_symbol||'$'}${fmtMoney(h.mkt_value)}</td>
+      <td class="font-label font-bold ${h.gain>=0?'text-emerald-600':'text-red-500'}">${h.gain>=0?'+':''}${h.currency_symbol||'$'}${fmtMoney(h.gain)} (${h.gain_pct>=0?'+':''}${h.gain_pct.toFixed(2)}%)</td>
       <td><button onclick="removeHolding('${h.ticker}')" class="text-red-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-base">delete</span></button></td>
     </tr>`).join('')}
     </tbody></table>`;
@@ -957,7 +960,7 @@ async function loadWatchlist() {
           <p class="text-[10px] text-slate-400 truncate max-w-[120px]">${q.name||''}</p>
         </div>
       </div>
-      <p class="font-label text-3xl font-black text-slate-900">$${q.price.toFixed(2)}</p>
+      <p class="font-label text-3xl font-black text-slate-900">${q.currency_symbol||'₹'}${q.price.toFixed(2)}</p>
       <div class="flex justify-between items-center mt-2">
         <span class="badge ${q.change>=0?'badge-green':'badge-red'}">${q.change>=0?'+':''}${q.change.toFixed(2)}%</span>
         <span class="text-xs text-slate-400 font-label">Vol: ${fmtNum(q.volume)}</span>
